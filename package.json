@@ -1,0 +1,23 @@
+{
+  "name": "weather-cli",
+  "version": "1.0.0",
+  "description": "基于 Node.js 原生 ESM 的命令行天气查询工具",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "weather": "./bin/weather.js"
+  },
+  "scripts": {
+    "start": "node bin/weather.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "weather",
+    "cli",
+    "esm"
+  ],
+  "author": "",
+  "license": "MIT"
+}
