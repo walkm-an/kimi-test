@@ -1,6 +1,6 @@
 {
   "name": "weather-cli",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "基于 Node.js 原生 ESM 的命令行天气查询工具",
   "type": "module",
   "main": "src/index.js",
