@@ -18,12 +18,11 @@
 ## 安装
 
 ```bash
-# 克隆或进入项目目录
-cd weather-cli
-
-# 可选：链接到全局，方便直接使用 weather 命令
+# 进入项目目录后
 npm link
 ```
+
+或直接通过 `node bin/weather.js` 运行。
 
 ## 使用
 
@@ -81,7 +80,7 @@ node test/index.test.js
 ## 项目结构
 
 ```text
-weather-cli/
+.
 ├── bin/
 │   └── weather.js        # 可执行入口
 ├── src/
