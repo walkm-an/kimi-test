@@ -8,7 +8,8 @@
     "weather": "./bin/weather.js"
   },
   "scripts": {
-    "start": "node bin/weather.js"
+    "start": "node bin/weather.js",
+    "test": "node test/geocode.test.js && node test/weather.test.js && node test/airquality.test.js && node test/formatter.test.js && node test/index.test.js"
   },
   "engines": {
     "node": ">=18.0.0"
