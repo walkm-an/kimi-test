@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据小面板</title>
+  <style>
+    :root {
+      --bg: #f4f6fa;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #2563eb;
+      --ok: #059669;
+      --ok-bg: #ecfdf5;
+      --warn: #b45309;
+      --warn-bg: #fffbeb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px 48px; }
+    header { margin-bottom: 24px; }
+    h1 { margin: 0 0 6px; font-size: 28px; font-weight: 700; letter-spacing: 0.02em; }
+    .note { margin: 0; color: var(--muted); font-size: 14px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 22px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04);
+    }
+    .card h2 {
+      margin: 0 0 16px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+    .provider + .provider { margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--border); }
+    .provider-name { font-size: 13px; color: var(--muted); }
+    .big { font-size: 30px; font-weight: 700; margin: 2px 0 6px; font-variant-numeric: tabular-nums; }
+    .big small { font-size: 13px; font-weight: 400; color: var(--muted); margin-left: 6px; }
+    dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; }
+    dt { color: var(--muted); }
+    dd { margin: 0; font-variant-numeric: tabular-nums; }
+    .badge {
+      display: inline-block;
+      padding: 1px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--ok-bg);
+      color: var(--ok);
+    }
+    .warn {
+      margin-top: 16px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: var(--warn-bg);
+      color: var(--warn);
+      font-size: 13px;
+    }
+    .sub { color: var(--muted); font-size: 13px; }
+    ul.days { list-style: none; margin: 0; padding: 0; }
+    ul.days li { display: flex; gap: 14px; padding: 10px 0; }
+    ul.days li + li { border-top: 1px solid var(--border); }
+    .date {
+      flex: 0 0 auto;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      background: #eff6ff;
+      color: var(--accent);
+      border-radius: 8px;
+      padding: 2px 10px;
+      height: fit-content;
+    }
+    ul.days p { margin: 0; font-size: 14px; }
+    footer { margin-top: 28px; text-align: center; color: var(--muted); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>数据小面板</h1>
+      <p class="note">测试快照 · 数据截至 2026-10-20 23:00</p>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <h2>API 余额</h2>
+        <div class="provider">
+          <div class="provider-name">DeepSeek 余额</div>
+          <div class="big">¥15.96</div>
+          <dl>
+            <dt>充值</dt><dd>¥15.96</dd>
+            <dt>赠送</dt><dd>¥0.00</dd>
+            <dt>状态</dt><dd><span class="badge">可用</span></dd>
+          </dl>
+        </div>
+        <div class="provider">
+          <div class="provider-name">智谱 GLM</div>
+          <div class="big">¥21.72<small>现金可用余额</small></div>
+          <dl>
+            <dt>累计充值</dt><dd>¥110.00</dd>
+            <dt>累计消费</dt><dd>¥88.28</dd>
+          </dl>
+        </div>
+        <div class="warn">⚠ GLM 资源包已全部过期，约 4300 万 tokens 未用完即过期</div>
+      </section>
+
+      <section class="card">
+        <h2>Cursor</h2>
+        <dl>
+          <dt>状态</dt><dd><span class="badge">已接通</span></dd>
+          <dt>套餐</dt><dd>X Subscription Super <span class="sub">(100 USD/月)</span></dd>
+          <dt>本次任务模型</dt><dd>Claude Opus 5.5<br><span class="sub">由 Muse 通过 Cloud Agents API 派发</span></dd>
+        </dl>
+      </section>
+
+      <section class="card">
+        <h2>本周关键日子</h2>
+        <ul class="days">
+          <li><span class="date">10-22</span><p>黄热病疫苗小黄本生效，适合跑步（干爽）</p></li>
+          <li><span class="date">10-23</span><p>iPhone Duo 发售，早上查自提库存</p></li>
+          <li><span class="date">10-25</span><p>可能有小雨，听雨窗口</p></li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>静态测试页面 · 无外部依赖</footer>
+  </div>
+</body>
+</html>
