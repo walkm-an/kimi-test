@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title></title>
+  <style>
+    :root {
+      --bg-deep: #05060F;
+      --bg-mid: #0B1030;
+      --bg-violet: #1A1446;
+      --aurora-cyan: #22D3EE;
+      --aurora-violet: #8B5CF6;
+      --aurora-pink: #EC4899;
+      --text: #EEF1FF;
+      --text-muted: #A3A9C9;
+      --accent: #7CF5E6;
+      --glass: rgba(255, 255, 255, 0.06);
+      --glass-edge: rgba(255, 255, 255, 0.14);
+      --glass-solid: rgba(12, 16, 42, 0.82);
+      --glass-highlight: rgba(255, 255, 255, 0.12);
+      --shadow: rgba(0, 0, 0, 0.6);
+      --rail-line: rgba(167, 139, 250, 0.22);
+      --star: #E6ECFF;
+      --link: #A78BFA;
+      --ripple: #7CF5E6;
+      --mask-solid: #000;
+      --gutter: clamp(16px, 4vw, 40px);
+      --card-rise: 16px;
+      --sans: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+      --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { overflow-x: clip; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100svh;
+      color: var(--text);
+      background: radial-gradient(120% 80% at 50% 0%, var(--bg-violet), var(--bg-mid) 45%, var(--bg-deep));
+      font-family: var(--sans);
+    }
+
+    .sky {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .aurora {
+      position: absolute;
+      width: 60vmax;
+      height: 60vmax;
+      border-radius: 50%;
+      filter: blur(60px);
+      mix-blend-mode: screen;
+    }
+
+    .aurora-a {
+      top: -22vmax;
+      left: -12vmax;
+      opacity: 0.18;
+      background: radial-gradient(circle at 40% 40%, var(--aurora-cyan), var(--aurora-violet) 68%, transparent 72%);
+      animation: aurora-a 40s ease-in-out infinite alternate;
+    }
+
+    .aurora-b {
+      right: -16vmax;
+      bottom: -24vmax;
+      opacity: 0.22;
+      background: radial-gradient(circle at 60% 60%, var(--aurora-violet), var(--aurora-pink) 68%, transparent 72%);
+      animation: aurora-b 40s ease-in-out infinite alternate;
+    }
+
+    @keyframes aurora-a {
+      from { transform: translate3d(0, 0, 0) scale(1); }
+      to { transform: translate3d(8%, 6%, 0) scale(1.08); }
+    }
+
+    @keyframes aurora-b {
+      from { transform: translate3d(0, 0, 0) scale(1); }
+      to { transform: translate3d(-7%, -8%, 0) scale(1.1); }
+    }
+
+    .sky canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .stage {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      min-height: 100vh;
+      min-height: 100svh;
+      width: min(1120px, calc(100% - 2 * var(--gutter)));
+      margin-inline: auto;
+      min-width: 0;
+    }
+
+    .clock-rail {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px 24px;
+      padding-block: 14px;
+      border-bottom: 1px solid var(--rail-line);
+    }
+
+    .clock-label,
+    .clock-time,
+    .clock-date,
+    .card-value,
+    .marquee {
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .clock-label,
+    .clock-date,
+    .clock-time,
+    .card-metric { margin: 0; }
+
+    .clock-label {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+    }
+
+    .clock-readout {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      margin-left: auto;
+    }
+
+    .clock-time {
+      font-size: 1.25rem;
+      letter-spacing: 0.02em;
+      color: var(--text);
+    }
+
+    .sec {
+      display: inline-block;
+      overflow: hidden;
+      height: 1.15em;
+      line-height: 1.15em;
+      vertical-align: bottom;
+    }
+
+    .sec span { display: inline-block; }
+
+    .clock-date {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .hero {
+      text-align: center;
+      padding-block: clamp(40px, 9vh, 96px) 24px;
+    }
+
+    .title {
+      margin: 0;
+      color: var(--text);
+      font-weight: 800;
+      font-size: clamp(2.5rem, 8vw, 6rem);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+
+    @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+      .title {
+        background-image: linear-gradient(100deg, var(--aurora-cyan), var(--aurora-violet), var(--aurora-pink), var(--aurora-cyan));
+        background-size: 200% 100%;
+        background-position: 0% 50%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: title-pan 12s linear infinite;
+      }
+    }
+
+    @keyframes title-pan {
+      from { background-position: 0% 50%; }
+      to { background-position: 100% 50%; }
+    }
+
+    .typewriter {
+      margin: 18px 0 0;
+      min-height: 1.6em;
+      font-size: clamp(1.0625rem, 2.2vw, 1.375rem);
+      color: var(--text-muted);
+    }
+
+    .typewriter::after {
+      content: "▍";
+      margin-left: 0.12em;
+      color: var(--accent);
+    }
+
+    .cards {
+      align-self: center;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(12px, 2vw, 24px);
+      width: 100%;
+      padding-block: 32px;
+    }
+
+    .card {
+      padding: 22px 22px 18px;
+      background: var(--glass);
+      border: 1px solid var(--glass-edge);
+      border-radius: 18px;
+      box-shadow: inset 0 1px 0 var(--glass-highlight), 0 20px 40px -24px var(--shadow);
+      backdrop-filter: blur(14px) saturate(140%);
+      -webkit-backdrop-filter: blur(14px) saturate(140%);
+      opacity: 0;
+      transform: translateY(var(--card-rise));
+      transition: opacity var(--card-rise-ms, 700ms) ease, transform var(--card-rise-ms, 700ms) ease;
+      transition-delay: calc(var(--i) * var(--card-stagger-ms, 120ms));
+    }
+
+    .card[data-entered] {
+      opacity: 1;
+      transform: none;
+    }
+
+    .card-label {
+      margin: 0 0 12px;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .card-metric {
+      display: flex;
+      align-items: baseline;
+      gap: 0.35em;
+    }
+
+    .card-value {
+      font-size: clamp(2.25rem, 4vw, 3.25rem);
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .card-unit {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .marquee-rail {
+      min-width: 0;
+      overflow: hidden;
+      padding-block: 12px;
+      border-top: 1px solid var(--rail-line);
+      mask-image: linear-gradient(90deg, transparent, var(--mask-solid) 8%, var(--mask-solid) 92%, transparent);
+      -webkit-mask-image: linear-gradient(90deg, transparent, var(--mask-solid) 8%, var(--mask-solid) 92%, transparent);
+    }
+
+    .marquee-track {
+      display: flex;
+      width: max-content;
+      animation: marquee-scroll var(--marquee-ms, 20s) linear infinite;
+    }
+
+    .marquee-group {
+      display: flex;
+      flex-shrink: 0;
+    }
+
+    .marquee-row {
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .marquee-item {
+      padding-inline: 0.95rem;
+      font-size: 0.875rem;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    .marquee-sep { color: var(--accent); }
+
+    @keyframes marquee-scroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    .noscript {
+      position: relative;
+      z-index: 1;
+      width: min(1120px, calc(100% - 2 * var(--gutter)));
+      margin: 24px auto;
+      color: var(--text);
+    }
+
+    /* A live backdrop-filter over the canvas recomposites every frame on many phones. */
+    @media (pointer: coarse) {
+      .card {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        background: var(--glass-solid);
+      }
+    }
+
+    @media (max-width: 639px) {
+      .cards { grid-template-columns: 1fr; }
+      .clock-rail { flex-wrap: wrap; }
+      .clock-readout {
+        flex-basis: 100%;
+        flex-wrap: wrap;
+        margin-left: 0;
+      }
+      .clock-time {
+        flex-basis: 100%;
+        font-size: 1.5rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .aurora-a,
+      .aurora-b,
+      .title,
+      .marquee-track { animation: none; }
+
+      .card {
+        transform: none;
+        transition: opacity 200ms ease;
+      }
+
+      .marquee-rail {
+        mask-image: none;
+        -webkit-mask-image: none;
+      }
+
+      .marquee-track,
+      .marquee-group {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .marquee-group .marquee-row + .marquee-row,
+      .marquee-track [data-clone] { display: none; }
+
+      .marquee-group .marquee-row {
+        width: 100%;
+        white-space: normal;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .typewriter::after { content: none; }
+    }
+  </style>
+</head>
+<body>
+  <noscript><p class="noscript">请启用 JavaScript 以查看这片星空。</p></noscript>
+  <div class="sky" aria-hidden="true">
+    <div class="aurora aurora-a"></div>
+    <div class="aurora aurora-b"></div>
+    <canvas id="field"></canvas>
+  </div>
+  <main class="stage">
+    <header class="clock-rail">
+      <p class="clock-label" id="clock-label"></p>
+      <div class="clock-readout">
+        <p class="clock-time">
+          <span id="hh"></span><span id="colon-hm" aria-hidden="true"></span><span id="mm"></span><span id="colon-ms" aria-hidden="true"></span><span class="sec"><span id="ss-tens"></span><span id="ss-ones"></span></span>
+        </p>
+        <p class="clock-date" id="clock-date"></p>
+      </div>
+    </header>
+    <section class="hero">
+      <h1 class="title" id="title"></h1>
+      <p class="typewriter" id="typewriter"></p>
+    </section>
+    <section class="cards" id="cards"></section>
+    <footer class="marquee-rail">
+      <div class="marquee" id="marquee">
+        <div class="marquee-track" id="marquee-track">
+          <div class="marquee-group" id="marquee-group"></div>
+        </div>
+      </div>
+    </footer>
+  </main>
+  <script>
+  (() => {
+    'use strict';
+
+    const CONTENT = Object.freeze({
+      title: '我的星空',
+      sentences: Object.freeze([
+        '今晚的天空很安静。',
+        '星星不说话，但一直在。',
+        '慢一点，也能走很远。',
+        '把光留给愿意抬头的人。',
+      ]),
+      cards: Object.freeze([
+        Object.freeze({ label: '观测之夜', target: 412, unit: '夜' }),
+        Object.freeze({ label: '记录的星', target: 2048, unit: '颗' }),
+        Object.freeze({ label: '写下的笔记', target: 96, unit: '篇' }),
+      ]),
+      marquee: Object.freeze(['猎户座', '天狼星', '北极星', '织女星', '牛郎星', '仙后座', '昴星团', '银河']),
+      clock: Object.freeze({ timeZone: 'Asia/Shanghai', label: '上海 · 北京时间' }),
+    });
+
+    const TIMING = Object.freeze({
+      typewriter: Object.freeze({ charMs: 110, holdMs: 1800, deleteCharMs: 45, gapMs: 400 }),
+      counterMs: 1600,
+      cardStaggerMs: 120,
+      cardRiseMs: 700,
+      secondsTickMs: 280,
+      rippleMs: 900,
+      marqueePxPerSec: 40,
+      maxFrameDtMs: 50,
+    });
+
+    const FIELD_TUNING = Object.freeze({
+      stride: 8,
+      baseSpeed: Object.freeze({ min: 0.006, max: 0.02 }),
+      maxSpeed: 0.35,
+      relaxMs: 900,
+      pointerRadius: Object.freeze({ fine: 140, coarse: 110 }),
+      pointerCore: 12,
+      pull: 0.00012,
+      linkDistance: 90,
+      nearCap: 32,
+      rippleMaxRadius: 220,
+      rippleBand: 18,
+      ripplePush: 0.08,
+      rippleCap: 8,
+      radius: Object.freeze({ min: 0.6, max: 1.8 }),
+      twinkleRadPerMs: 0.0015,
+      tiers: Object.freeze({
+        low: Object.freeze({ pxPerParticle: 16000, cap: 90, dprCap: 1.5 }),
+        mid: Object.freeze({ pxPerParticle: 10000, cap: 160, dprCap: 2 }),
+        high: Object.freeze({ pxPerParticle: 7000, cap: 240, dprCap: 2 }),
+      }),
+      minCount: 36,
+      degrade: Object.freeze({ emaAlpha: 0.1, slowMs: 24, slowFrames: 90, factor: 0.75, maxLevel: 3 }),
+    });
+
+    const NUMBER = new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 0, useGrouping: false });
+    const TOUCH_LINGER_MS = 600;
+    const COUNTER_LEAD_MS = 150;
+    const HASH_INDEX = 374761393;
+    const HASH_SALT = 668265263;
+    const STAR_X = 1;
+    const STAR_Y = 2;
+    const STAR_SPEED = 3;
+    const STAR_HEADING = 4;
+    const STAR_RADIUS = 5;
+    const STAR_PHASE = 6;
+
+    function assertSpec(content) {
+      if (!content || typeof content.title !== 'string' || content.title.length === 0) {
+        throw new Error('CONTENT.title must be a non-empty string');
+      }
+      const sentences = content.sentences;
+      if (!sentences || sentences.length < 3 || sentences.length > 4) {
+        throw new Error('CONTENT.sentences must contain 3 or 4 entries');
+      }
+      for (let i = 0; i < sentences.length; i++) {
+        if (typeof sentences[i] !== 'string' || sentences[i].length === 0) {
+          throw new Error('CONTENT.sentences[' + i + '] must be a non-empty string');
+        }
+      }
+      const cards = content.cards;
+      if (!cards || cards.length !== 3) throw new Error('CONTENT.cards must contain 3 items');
+      for (let i = 0; i < cards.length; i++) {
+        const card = cards[i];
+        if (!card || typeof card.label !== 'string' || card.label.length === 0) {
+          throw new Error('CONTENT.cards[' + i + '].label must be a non-empty string');
+        }
+        if (!Number.isInteger(card.target) || card.target < 0) {
+          throw new Error('CONTENT.cards[' + i + '].target must be a non-negative integer');
+        }
+        if (typeof card.unit !== 'string' || card.unit.length === 0) {
+          throw new Error('CONTENT.cards[' + i + '].unit must be a non-empty string');
+        }
+      }
+      if (!content.marquee || content.marquee.length < 1) {
+        throw new Error('CONTENT.marquee must contain at least one item');
+      }
+      for (let i = 0; i < content.marquee.length; i++) {
+        if (typeof content.marquee[i] !== 'string' || content.marquee[i].length === 0) {
+          throw new Error('CONTENT.marquee[' + i + '] must be a non-empty string');
+        }
+      }
+      if (!content.clock || content.clock.timeZone !== 'Asia/Shanghai') {
+        throw new Error('CONTENT.clock.timeZone must be Asia/Shanghai');
+      }
+      if (typeof content.clock.label !== 'string' || content.clock.label.length === 0) {
+        throw new Error('CONTENT.clock.label must be a non-empty string');
+      }
+    }
+
+    function readEnv(win) {
+      const nav = win.navigator;
+      const cores = nav.hardwareConcurrency;
+      const memory = nav.deviceMemory;
+      const coarse = win.matchMedia('(pointer: coarse)').matches;
+      const lowCpu = typeof cores === 'number' && cores <= 4;
+      const lowMem = typeof memory === 'number' && memory <= 4;
+      let tier = 'mid';
+      if (coarse || lowCpu || lowMem) tier = 'low';
+      else if (typeof cores === 'number' && cores >= 8) tier = 'high';
+      const dpr = Math.min(win.devicePixelRatio || 1, FIELD_TUNING.tiers[tier].dprCap);
+      return {
+        cssW: win.innerWidth,
+        cssH: win.innerHeight,
+        dpr,
+        tier,
+        coarse,
+      };
+    }
+
+    function readMotion(win) {
+      if (win.matchMedia('(prefers-reduced-motion: reduce)').matches) return { kind: 'reduced' };
+      return { kind: 'full' };
+    }
+
+    function readTheme(rootStyle) {
+      return {
+        star: rootStyle.getPropertyValue('--star').trim(),
+        link: rootStyle.getPropertyValue('--link').trim(),
+        ripple: rootStyle.getPropertyValue('--ripple').trim(),
+      };
+    }
+
+    const ease = Object.freeze({
+      outCubic: (p) => 1 - (1 - p) ** 3,
+      outExpo: (p) => (p >= 1 ? 1 : 1 - 2 ** (-10 * p)),
+    });
+
+    function compileTypewriter(sentences, timing) {
+      const tw = timing.typewriter;
+      const chars = [];
+      const segments = [];
+      let running = 0;
+      for (let i = 0; i < sentences.length; i++) {
+        const points = Array.from(sentences[i]);
+        const typeMs = points.length * tw.charMs;
+        const deleteMs = points.length * tw.deleteCharMs;
+        chars.push(Object.freeze(points));
+        segments.push(Object.freeze({
+          start: running,
+          typeMs,
+          holdMs: tw.holdMs,
+          deleteMs,
+          gapMs: tw.gapMs,
+        }));
+        running += typeMs + tw.holdMs + deleteMs + tw.gapMs;
+      }
+      return Object.freeze({
+        chars: Object.freeze(chars),
+        segments: Object.freeze(segments),
+        cycleMs: running,
+      });
+    }
+
+    function typewriterAt(plan, elapsedMs) {
+      const cycle = plan.cycleMs;
+      if (cycle <= 0) return { index: 0, text: '' };
+      let elapsed = elapsedMs % cycle;
+      if (elapsed < 0) elapsed += cycle;
+      const segments = plan.segments;
+      let index = 0;
+      for (let i = 0; i < segments.length; i++) {
+        const next = i + 1 < segments.length ? segments[i + 1].start : cycle;
+        if (elapsed >= segments[i].start && elapsed < next) {
+          index = i;
+          break;
+        }
+      }
+      const segment = segments[index];
+      const chars = plan.chars[index];
+      const length = chars.length;
+      const u = elapsed - segment.start;
+      let n = 0;
+      if (length > 0 && u < segment.typeMs) {
+        n = Math.min(length, Math.floor(u / (segment.typeMs / length)) + 1);
+      } else if (u < segment.typeMs + segment.holdMs) {
+        n = length;
+      } else if (length > 0 && u < segment.typeMs + segment.holdMs + segment.deleteMs) {
+        const into = u - segment.typeMs - segment.holdMs;
+        n = length - Math.floor(into / (segment.deleteMs / length)) - 1;
+        if (n < 0) n = 0;
+      }
+      return { index, text: chars.slice(0, n).join('') };
+    }
+
+    function counterAt(phase, target, index, nowMs, timing) {
+      if (phase.kind !== 'entered') return 0;
+      const start = phase.at + index * timing.cardStaggerMs + COUNTER_LEAD_MS;
+      const p = Math.min(1, Math.max(0, (nowMs - start) / timing.counterMs));
+      return Math.round(target * ease.outExpo(p));
+    }
+
+    function rippleAt(ageMs, tuning, timing) {
+      const p = ageMs / timing.rippleMs;
+      if (!(p >= 0) || p >= 1) return null;
+      return {
+        radius: ease.outCubic(p) * tuning.rippleMaxRadius,
+        alpha: 0.7 * (1 - p) ** 1.5,
+        push: tuning.ripplePush * (1 - p),
+      };
+    }
+
+    function partValue(parts, type) {
+      for (let i = 0; i < parts.length; i++) {
+        if (parts[i].type === type) return parts[i].value;
+      }
+      return '';
+    }
+
+    function pad2(value) {
+      return value.length >= 2 ? value : '0' + value;
+    }
+
+    function readClockFixed(epochMs) {
+      const shifted = new Date(epochMs + 8 * 60 * 60 * 1000);
+      const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+      return {
+        hh: pad2(String(shifted.getUTCHours())),
+        mm: pad2(String(shifted.getUTCMinutes())),
+        ss: pad2(String(shifted.getUTCSeconds())),
+        date: shifted.getUTCFullYear() + '年' + (shifted.getUTCMonth() + 1) + '月' + shifted.getUTCDate() + '日 ' + weekdays[shifted.getUTCDay()],
+      };
+    }
+
+    function readClock(epochMs, formats) {
+      try {
+        const time = formats.time.formatToParts(epochMs);
+        const date = formats.date.formatToParts(epochMs);
+        let hh = partValue(time, 'hour');
+        if (hh === '24') hh = '00';
+        return {
+          hh: pad2(hh),
+          mm: pad2(partValue(time, 'minute')),
+          ss: pad2(partValue(time, 'second')),
+          date: partValue(date, 'year') + '年' + partValue(date, 'month') + '月' + partValue(date, 'day') + '日 ' + partValue(date, 'weekday'),
+        };
+      } catch (err) {
+        return readClockFixed(epochMs);
+      }
+    }
+
+    function buildClockFormats(timeZone) {
+      return {
+        time: new Intl.DateTimeFormat('zh-CN', {
+          timeZone,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+          hourCycle: 'h23',
+        }),
+        date: new Intl.DateTimeFormat('zh-CN', {
+          timeZone,
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+          weekday: 'long',
+        }),
+      };
+    }
+
+    function msToNextSecond(epochMs) {
+      return 1000 - (epochMs % 1000) + 12;
+    }
+
+    function marqueeRepeats(rowWidthPx, viewportWidthPx) {
+      if (!(rowWidthPx > 0) || !(viewportWidthPx > 0)) return 1;
+      return Math.max(1, Math.ceil(viewportWidthPx / rowWidthPx));
+    }
+
+    function createField(tier, tuning) {
+      const capacity = tuning.tiers[tier].cap;
+      return {
+        data: new Float32Array(capacity * tuning.stride),
+        capacity,
+        count: 0,
+        seeded: 0,
+        near: new Int16Array(tuning.nearCap),
+        nearLen: 0,
+      };
+    }
+
+    function fieldCount(env, degradeLevel, tuning) {
+      const tier = tuning.tiers[env.tier];
+      const base = Math.round((env.cssW * env.cssH) / tier.pxPerParticle);
+      const scaled = Math.round(base * (tuning.degrade.factor ** degradeLevel));
+      if (scaled < tuning.minCount) return Math.min(tuning.minCount, tier.cap);
+      if (scaled > tier.cap) return tier.cap;
+      return scaled;
+    }
+
+    function xorshift32(seed) {
+      let x = seed >>> 0;
+      if (x === 0) x = 0x6d2b79f5;
+      x ^= x << 13;
+      x >>>= 0;
+      x ^= x >>> 17;
+      x ^= x << 5;
+      return x >>> 0;
+    }
+
+    function hashUnit(index, salt) {
+      const mixed = (Math.imul(index + 1, HASH_INDEX) + Math.imul(salt, HASH_SALT)) >>> 0;
+      return xorshift32(mixed) / 4294967296;
+    }
+
+    function seedSlots(field, next, env, tuning) {
+      if (next <= field.seeded) return;
+      const data = field.data;
+      const stride = tuning.stride;
+      const speedSpan = tuning.baseSpeed.max - tuning.baseSpeed.min;
+      const radiusSpan = tuning.radius.max - tuning.radius.min;
+      for (let i = field.seeded; i < next; i++) {
+        const o = i * stride;
+        const speed = tuning.baseSpeed.min + hashUnit(i, STAR_SPEED) * speedSpan;
+        const heading = hashUnit(i, STAR_HEADING) * Math.PI * 2;
+        const bx = Math.cos(heading) * speed;
+        const by = Math.sin(heading) * speed;
+        data[o] = hashUnit(i, STAR_X) * env.cssW;
+        data[o + 1] = hashUnit(i, STAR_Y) * env.cssH;
+        data[o + 2] = bx;
+        data[o + 3] = by;
+        data[o + 4] = bx;
+        data[o + 5] = by;
+        data[o + 6] = tuning.radius.min + hashUnit(i, STAR_RADIUS) * radiusSpan;
+        data[o + 7] = hashUnit(i, STAR_PHASE) * Math.PI * 2;
+      }
+      field.seeded = next;
+    }
+
+    function reconcileCount(field, target, env, tuning) {
+      const cap = field.capacity;
+      let next = target;
+      if (next < 0) next = 0;
+      if (next > cap) next = cap;
+      if (env.cssW > 0 && env.cssH > 0) seedSlots(field, next, env, tuning);
+      field.count = Math.min(next, field.seeded);
+    }
+
+    function createRippleRing(cap) {
+      const items = [];
+      for (let i = 0; i < cap; i++) items.push(null);
+      return { items, next: 0 };
+    }
+
+    function pushRipple(ring, x, y, nowMs) {
+      ring.items[ring.next] = { x, y, t0: nowMs };
+      ring.next = (ring.next + 1) % ring.items.length;
+    }
+
+    function wrapCoord(value, min, span) {
+      if (span <= 0) return min;
+      let t = (value - min) % span;
+      if (t < 0) t += span;
+      return min + t;
+    }
+
+    function stepField(field, pointer, ring, env, nowMs, dtMs, tuning, timing) {
+      const data = field.data;
+      const stride = tuning.stride;
+      const count = field.count;
+      const reach = env.coarse ? tuning.pointerRadius.coarse : tuning.pointerRadius.fine;
+      const relax = 1 - Math.exp(-dtMs / tuning.relaxMs);
+      const hasPointer = pointer.kind === 'present';
+      const px = hasPointer ? pointer.x : 0;
+      const py = hasPointer ? pointer.y : 0;
+      const minX = -8;
+      const minY = -8;
+      const spanX = env.cssW + 16;
+      const spanY = env.cssH + 16;
+      const ripples = ring.items;
+      const live = [];
+      for (let i = 0; i < ripples.length; i++) {
+        const item = ripples[i];
+        if (!item) continue;
+        const state = rippleAt(nowMs - item.t0, tuning, timing);
+        if (!state) continue;
+        live.push({ x: item.x, y: item.y, radius: state.radius, push: state.push });
+      }
+      const near = field.near;
+      let nearLen = 0;
+      for (let i = 0; i < count; i++) {
+        const o = i * stride;
+        let x = data[o];
+        let y = data[o + 1];
+        let vx = data[o + 2];
+        let vy = data[o + 3];
+        if (hasPointer) {
+          const dx = px - x;
+          const dy = py - y;
+          const dist = Math.hypot(dx, dy);
+          if (dist > tuning.pointerCore && dist < reach) {
+            const force = tuning.pull * (1 - dist / reach) * dtMs;
+            vx += (dx / dist) * force;
+            vy += (dy / dist) * force;
+          }
+          if (dist < reach && nearLen < near.length) near[nearLen++] = i;
+        }
+        for (let r = 0; r < live.length; r++) {
+          const ripple = live[r];
+          const dx = x - ripple.x;
+          const dy = y - ripple.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist > 0 && Math.abs(dist - ripple.radius) < tuning.rippleBand) {
+            vx += (dx / dist) * ripple.push;
+            vy += (dy / dist) * ripple.push;
+          }
+        }
+        vx += (data[o + 4] - vx) * relax;
+        vy += (data[o + 5] - vy) * relax;
+        const speed = Math.hypot(vx, vy);
+        if (speed > tuning.maxSpeed) {
+          const scale = tuning.maxSpeed / speed;
+          vx *= scale;
+          vy *= scale;
+        }
+        x += vx * dtMs;
+        y += vy * dtMs;
+        data[o] = wrapCoord(x, minX, spanX);
+        data[o + 1] = wrapCoord(y, minY, spanY);
+        data[o + 2] = vx;
+        data[o + 3] = vy;
+      }
+      field.nearLen = nearLen;
+    }
+
+    function clearField(ctx, env) {
+      const canvas = ctx.canvas;
+      ctx.globalAlpha = 1;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.setTransform(env.dpr, 0, 0, env.dpr, 0, 0);
+    }
+
+    function drawStars(ctx, field, theme, alphaAt) {
+      const data = field.data;
+      const stride = FIELD_TUNING.stride;
+      ctx.fillStyle = theme.star;
+      for (let i = 0; i < field.count; i++) {
+        const o = i * stride;
+        ctx.globalAlpha = alphaAt(data[o + 7], i);
+        ctx.beginPath();
+        ctx.arc(data[o], data[o + 1], data[o + 6], 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawField(ctx, field, pointer, ring, env, theme, nowMs, tuning, timing) {
+      clearField(ctx, env);
+      const twinkle = tuning.twinkleRadPerMs;
+      drawStars(ctx, field, theme, (phase) => 0.55 + 0.45 * Math.sin(nowMs * twinkle + phase));
+      const reach = env.coarse ? tuning.pointerRadius.coarse : tuning.pointerRadius.fine;
+      const data = field.data;
+      const stride = tuning.stride;
+      if (pointer.kind === 'present' && field.nearLen > 0) {
+        ctx.strokeStyle = theme.link;
+        ctx.lineWidth = 1;
+        const near = field.near;
+        const n = field.nearLen;
+        for (let i = 0; i < n; i++) {
+          const o = near[i] * stride;
+          const dist = Math.hypot(data[o] - pointer.x, data[o + 1] - pointer.y);
+          ctx.globalAlpha = 0.5 * (1 - dist / reach);
+          ctx.beginPath();
+          ctx.moveTo(pointer.x, pointer.y);
+          ctx.lineTo(data[o], data[o + 1]);
+          ctx.stroke();
+        }
+        for (let a = 0; a < n; a++) {
+          const oa = near[a] * stride;
+          for (let b = a + 1; b < n; b++) {
+            const ob = near[b] * stride;
+            const dist = Math.hypot(data[ob] - data[oa], data[ob + 1] - data[oa + 1]);
+            if (dist >= tuning.linkDistance) continue;
+            ctx.globalAlpha = 0.35 * (1 - dist / tuning.linkDistance);
+            ctx.beginPath();
+            ctx.moveTo(data[oa], data[oa + 1]);
+            ctx.lineTo(data[ob], data[ob + 1]);
+            ctx.stroke();
+          }
+        }
+      }
+      ctx.strokeStyle = theme.ripple;
+      ctx.lineWidth = 1.5;
+      const items = ring.items;
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (!item) continue;
+        const state = rippleAt(nowMs - item.t0, tuning, timing);
+        if (!state) continue;
+        ctx.globalAlpha = state.alpha;
+        ctx.beginPath();
+        ctx.arc(item.x, item.y, Math.max(0, state.radius), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawFieldStatic(ctx, field, env, theme) {
+      clearField(ctx, env);
+      drawStars(ctx, field, theme, () => 0.85);
+      ctx.globalAlpha = 1;
+    }
+
+    function activeTouch(slots, nowMs) {
+      const touch = slots.touch;
+      if (!touch) return null;
+      if (slots.touching) return { x: touch.x, y: touch.y, at: nowMs };
+      if (nowMs - touch.at <= TOUCH_LINGER_MS) return touch;
+      return null;
+    }
+
+    function resolvePointer(slots, nowMs) {
+      const touch = activeTouch(slots, nowMs);
+      let pick = slots.mouse;
+      if (touch && (!pick || touch.at >= pick.at)) pick = touch;
+      if (!pick) return { kind: 'absent' };
+      return { kind: 'present', x: pick.x, y: pick.y };
+    }
+
+    function bindInput(win, slots, ring, isMotionFull) {
+      const now = () => win.performance.now();
+      win.addEventListener('pointermove', (event) => {
+        if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
+        slots.mouse = { x: event.clientX, y: event.clientY, at: now() };
+      });
+      win.document.addEventListener('pointerleave', () => {
+        slots.mouse = null;
+      });
+      const writeTouch = (event) => {
+        const point = event.touches[0];
+        if (!point) return;
+        slots.touching = true;
+        slots.touch = { x: point.clientX, y: point.clientY, at: now() };
+      };
+      // Touch pointers are cancelled as soon as the page scrolls, so this slot is fed by touch events.
+      win.addEventListener('touchstart', writeTouch, { passive: true });
+      win.addEventListener('touchmove', writeTouch, { passive: true });
+      const endTouch = (event) => {
+        const point = event.touches[0];
+        slots.touching = !!point;
+        if (!slots.touch) return;
+        if (point) slots.touch = { x: point.clientX, y: point.clientY, at: now() };
+        else slots.touch = { x: slots.touch.x, y: slots.touch.y, at: now() };
+      };
+      win.addEventListener('touchend', endTouch, { passive: true });
+      win.addEventListener('touchcancel', endTouch, { passive: true });
+      win.addEventListener('pointerdown', (event) => {
+        if (!isMotionFull()) return;
+        pushRipple(ring, event.clientX, event.clientY, now());
+      });
+    }
+
+    function observeFrame(perf, dtMs, tuning) {
+      const degrade = tuning.degrade;
+      const ema = perf.ema + degrade.emaAlpha * (dtMs - perf.ema);
+      const slow = ema > degrade.slowMs ? perf.slow + 1 : 0;
+      if (slow >= degrade.slowFrames && perf.level < degrade.maxLevel) {
+        return { ema, slow: 0, level: perf.level + 1 };
+      }
+      return { ema, slow, level: perf.level };
+    }
+
+    function mountView(doc, content) {
+      doc.title = content.title;
+      const title = doc.getElementById('title');
+      title.textContent = content.title;
+      doc.getElementById('clock-label').textContent = content.clock.label;
+      doc.getElementById('colon-hm').textContent = ':';
+      doc.getElementById('colon-ms').textContent = ':';
+      const cardsRoot = doc.getElementById('cards');
+      const cards = [];
+      for (let i = 0; i < content.cards.length; i++) {
+        const card = content.cards[i];
+        const root = doc.createElement('article');
+        root.className = 'card';
+        root.style.setProperty('--i', String(i));
+        root.dataset.index = String(i);
+        root.setAttribute('aria-label', card.label + ' ' + NUMBER.format(card.target) + ' ' + card.unit);
+        const label = doc.createElement('p');
+        label.className = 'card-label';
+        label.textContent = card.label;
+        const metric = doc.createElement('p');
+        metric.className = 'card-metric';
+        const value = doc.createElement('span');
+        value.className = 'card-value';
+        value.setAttribute('aria-hidden', 'true');
+        value.textContent = '0';
+        const unit = doc.createElement('span');
+        unit.className = 'card-unit';
+        unit.textContent = card.unit;
+        metric.append(value, unit);
+        root.append(label, metric);
+        cardsRoot.append(root);
+        cards.push({ root, value });
+      }
+      return {
+        canvas: doc.getElementById('field'),
+        title,
+        typewriter: doc.getElementById('typewriter'),
+        cards,
+        clock: {
+          hh: doc.getElementById('hh'),
+          mm: doc.getElementById('mm'),
+          ssTens: doc.getElementById('ss-tens'),
+          ssOnes: doc.getElementById('ss-ones'),
+          date: doc.getElementById('clock-date'),
+        },
+        marquee: {
+          track: doc.getElementById('marquee-track'),
+          group: doc.getElementById('marquee-group'),
+        },
+      };
+    }
+
+    function writeText(el, text) {
+      if (el.textContent !== text) el.textContent = text;
+    }
+
+    function stopRoll(el) {
+      if (typeof el.getAnimations !== 'function') return;
+      const anims = el.getAnimations();
+      for (let i = 0; i < anims.length; i++) anims[i].cancel();
+    }
+
+    function writeDigit(el, prev, next, motion, timing) {
+      if (prev === next) return;
+      writeText(el, next);
+      if (motion.kind !== 'full' || prev == null || typeof el.animate !== 'function') return;
+      stopRoll(el);
+      el.animate(
+        [{ transform: 'translateY(-45%)', opacity: 0 }, { transform: 'none', opacity: 1 }],
+        { duration: timing.secondsTickMs, easing: 'cubic-bezier(.2,.8,.2,1)' }
+      );
+    }
+
+    function renderClock(clockView, prev, next, motion, timing) {
+      writeText(clockView.hh, next.hh);
+      writeText(clockView.mm, next.mm);
+      writeText(clockView.date, next.date);
+      const prevTens = prev ? prev.ss.charAt(0) : null;
+      const prevOnes = prev ? prev.ss.charAt(1) : null;
+      if (motion.kind !== 'full') {
+        stopRoll(clockView.ssTens);
+        stopRoll(clockView.ssOnes);
+      }
+      writeDigit(clockView.ssTens, prevTens, next.ss.charAt(0), motion, timing);
+      writeDigit(clockView.ssOnes, prevOnes, next.ss.charAt(1), motion, timing);
+    }
+
+    function fillRow(row, items) {
+      const doc = row.ownerDocument;
+      for (let i = 0; i < items.length; i++) {
+        const name = doc.createElement('span');
+        name.className = 'marquee-item';
+        name.textContent = items[i];
+        const sep = doc.createElement('span');
+        sep.className = 'marquee-sep';
+        sep.setAttribute('aria-hidden', 'true');
+        sep.textContent = '✦';
+        row.append(name, sep);
+      }
+    }
+
+    function layoutMarquee(marqueeView, items, viewportWidthPx, timing) {
+      const group = marqueeView.group;
+      const track = marqueeView.track;
+      const doc = group.ownerDocument;
+      group.replaceChildren();
+      const row = doc.createElement('span');
+      row.className = 'marquee-row';
+      fillRow(row, items);
+      group.append(row);
+      row.style.whiteSpace = 'nowrap';
+      const copies = marqueeRepeats(row.getBoundingClientRect().width, viewportWidthPx);
+      row.style.whiteSpace = '';
+      for (let i = 1; i < copies; i++) {
+        const extra = doc.createElement('span');
+        extra.className = 'marquee-row';
+        fillRow(extra, items);
+        group.append(extra);
+      }
+      const previous = track.querySelector('[data-clone]');
+      if (previous) previous.remove();
+      const clone = group.cloneNode(true);
+      clone.setAttribute('aria-hidden', 'true');
+      clone.dataset.clone = 'true';
+      track.append(clone);
+      const width = group.getBoundingClientRect().width;
+      const ms = width > 0 ? (width / timing.marqueePxPerSec) * 1000 : 1000;
+      track.style.setProperty('--marquee-ms', ms + 'ms');
+    }
+
+    function sizeCanvas(canvas, ctx, env) {
+      const w = Math.max(1, Math.round(env.cssW * env.dpr));
+      const h = Math.max(1, Math.round(env.cssH * env.dpr));
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+      }
+      ctx.setTransform(env.dpr, 0, 0, env.dpr, 0, 0);
+    }
+
+    function paintCards(rt, view, nowMs, finals) {
+      const cards = rt.content.cards;
+      for (let i = 0; i < view.cards.length; i++) {
+        const shown = finals
+          ? cards[i].target
+          : counterAt(rt.cards[i], cards[i].target, i, nowMs, TIMING);
+        writeText(view.cards[i].value, NUMBER.format(shown));
+      }
+    }
+
+    function paintStill(rt, view, ctx) {
+      if (rt.envDirty) {
+        sizeCanvas(view.canvas, ctx, rt.env);
+        rt.envDirty = false;
+      }
+      reconcileCount(rt.field, fieldCount(rt.env, rt.perf.level, FIELD_TUNING), rt.env, FIELD_TUNING);
+      drawFieldStatic(ctx, rt.field, rt.env, rt.theme);
+      writeText(view.typewriter, rt.content.sentences[0]);
+      paintCards(rt, view, 0, true);
+    }
+
+    function frame(rt, view, ctx, nowMs) {
+      const dt = rt.lastFrame == null
+        ? 16
+        : Math.min(Math.max(0, nowMs - rt.lastFrame), TIMING.maxFrameDtMs);
+      rt.lastFrame = nowMs;
+      if (rt.envDirty) {
+        sizeCanvas(view.canvas, ctx, rt.env);
+        reconcileCount(rt.field, fieldCount(rt.env, rt.perf.level, FIELD_TUNING), rt.env, FIELD_TUNING);
+        rt.envDirty = false;
+      }
+      const level = rt.perf.level;
+      rt.perf = observeFrame(rt.perf, dt, FIELD_TUNING);
+      if (rt.perf.level !== level) {
+        reconcileCount(rt.field, fieldCount(rt.env, rt.perf.level, FIELD_TUNING), rt.env, FIELD_TUNING);
+      }
+      const pointer = resolvePointer(rt.slots, nowMs);
+      stepField(rt.field, pointer, rt.ring, rt.env, nowMs, dt, FIELD_TUNING, TIMING);
+      drawField(ctx, rt.field, pointer, rt.ring, rt.env, rt.theme, nowMs, FIELD_TUNING, TIMING);
+      writeText(view.typewriter, typewriterAt(rt.typewriter, nowMs - rt.t0).text);
+      paintCards(rt, view, nowMs, false);
+    }
+
+    function syncLoop(rt, view, ctx, doc) {
+      const shouldRun = rt.motion.kind === 'full' && !doc.hidden;
+      if (!shouldRun && rt.rafId != null) {
+        cancelAnimationFrame(rt.rafId);
+        rt.rafId = null;
+      }
+      if (shouldRun && rt.rafId == null) {
+        if (rt.loopState !== 'running') rt.lastFrame = null;
+        rt.rafId = requestAnimationFrame((now) => {
+          rt.loopState = 'running';
+          rt.rafId = null;
+          frame(rt, view, ctx, now);
+          syncLoop(rt, view, ctx, doc);
+        });
+      }
+      if (!shouldRun) rt.loopState = 'stopped';
+      if (rt.motion.kind === 'reduced') paintStill(rt, view, ctx);
+    }
+
+    function startClock(rt, view, formats) {
+      if (rt.clockTimer != null) clearTimeout(rt.clockTimer);
+      const fire = () => {
+        const next = readClock(Date.now(), formats);
+        renderClock(view.clock, rt.lastClock, next, rt.motion, TIMING);
+        rt.lastClock = next;
+        rt.clockTimer = setTimeout(fire, msToNextSecond(Date.now()));
+      };
+      fire();
+    }
+
+    function boot(win, content) {
+      assertSpec(content);
+      const doc = win.document;
+      const rootStyle = doc.documentElement.style;
+      rootStyle.setProperty('--card-rise-ms', TIMING.cardRiseMs + 'ms');
+      rootStyle.setProperty('--card-stagger-ms', TIMING.cardStaggerMs + 'ms');
+      const view = mountView(doc, content);
+      const ctx = view.canvas.getContext('2d');
+      if (!ctx) throw new Error('canvas 2d context unavailable');
+      const rt = {
+        content,
+        env: readEnv(win),
+        envDirty: true,
+        motion: readMotion(win),
+        theme: readTheme(win.getComputedStyle(doc.documentElement)),
+        field: null,
+        slots: { mouse: null, touch: null, touching: false },
+        ring: createRippleRing(FIELD_TUNING.rippleCap),
+        cards: [],
+        perf: { ema: 16, slow: 0, level: 0 },
+        typewriter: compileTypewriter(content.sentences, TIMING),
+        t0: win.performance.now(),
+        lastFrame: null,
+        rafId: null,
+        loopState: 'stopped',
+        clockTimer: null,
+        lastClock: null,
+      };
+      rt.field = createField(rt.env.tier, FIELD_TUNING);
+      for (let i = 0; i < content.cards.length; i++) rt.cards.push({ kind: 'waiting' });
+      bindInput(win, rt.slots, rt.ring, () => rt.motion.kind === 'full');
+      let marqueeWidth = -1;
+      const onViewport = () => {
+        rt.env = readEnv(win);
+        rt.envDirty = true;
+        if (rt.env.cssW !== marqueeWidth) {
+          marqueeWidth = rt.env.cssW;
+          layoutMarquee(view.marquee, content.marquee, rt.env.cssW, TIMING);
+        }
+        syncLoop(rt, view, ctx, doc);
+      };
+      if (typeof win.ResizeObserver === 'function') {
+        const observer = new win.ResizeObserver(onViewport);
+        observer.observe(doc.documentElement);
+      } else {
+        win.addEventListener('resize', onViewport);
+      }
+      if (win.visualViewport) win.visualViewport.addEventListener('resize', onViewport);
+      const media = win.matchMedia('(prefers-reduced-motion: reduce)');
+      const onMotion = () => {
+        rt.motion = readMotion(win);
+        layoutMarquee(view.marquee, content.marquee, rt.env.cssW, TIMING);
+        syncLoop(rt, view, ctx, doc);
+      };
+      if (typeof media.addEventListener === 'function') media.addEventListener('change', onMotion);
+      else if (typeof media.addListener === 'function') media.addListener(onMotion);
+      doc.addEventListener('visibilitychange', () => syncLoop(rt, view, ctx, doc));
+      const markEntered = (index, at) => {
+        if (rt.cards[index].kind === 'entered') return;
+        rt.cards[index] = { kind: 'entered', at };
+        view.cards[index].root.setAttribute('data-entered', '');
+      };
+      if (typeof win.IntersectionObserver === 'function') {
+        const io = new win.IntersectionObserver((entries) => {
+          const at = win.performance.now();
+          for (let i = 0; i < entries.length; i++) {
+            const entry = entries[i];
+            if (!entry.isIntersecting) continue;
+            markEntered(Number(entry.target.dataset.index), at);
+            io.unobserve(entry.target);
+          }
+        }, { threshold: 0.3 });
+        for (let i = 0; i < view.cards.length; i++) io.observe(view.cards[i].root);
+      } else {
+        const at = win.performance.now();
+        for (let i = 0; i < view.cards.length; i++) markEntered(i, at);
+      }
+      startClock(rt, view, buildClockFormats(content.clock.timeZone));
+      layoutMarquee(view.marquee, content.marquee, rt.env.cssW, TIMING);
+      marqueeWidth = rt.env.cssW;
+      if (rt.motion.kind === 'full') writeText(view.typewriter, typewriterAt(rt.typewriter, 0).text);
+      syncLoop(rt, view, ctx, doc);
+    }
+
+    boot(window, CONTENT);
+  })();
+  </script>
+</body>
+</html>
